@@ -1,28 +1,24 @@
 import { createFileRoute, Link, Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getSpace, listMySpaces } from "@/lib/spaces.functions";
+import { getSpace, getMyProfile } from "@/lib/spaces.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { PageNav } from "@/components/page-nav";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
+  Activity,
   BarChart3,
   CalendarDays,
-  ChevronsUpDown,
   LayoutDashboard,
   LifeBuoy,
   ListChecks,
+  LogOut,
   Monitor,
+  Network,
   Settings,
+  ShieldCheck,
   Users,
   UserSquare2,
 } from "lucide-react";
@@ -33,8 +29,10 @@ export const Route = createFileRoute("/_authenticated/s/$spaceId")({
 
 const nav = [
   { to: "/s/$spaceId", label: "Overview", icon: LayoutDashboard, exact: true },
+  { to: "/s/$spaceId/attendance", label: "Attendance", icon: Activity },
   { to: "/s/$spaceId/events", label: "Events", icon: CalendarDays },
   { to: "/s/$spaceId/attendees", label: "Attendees", icon: UserSquare2 },
+  { to: "/s/$spaceId/departments", label: "Departments", icon: Network },
   { to: "/s/$spaceId/desks", label: "Desks", icon: Monitor },
   { to: "/s/$spaceId/templates", label: "Templates", icon: ListChecks },
   { to: "/s/$spaceId/members", label: "Members", icon: Users },
@@ -54,14 +52,14 @@ function SpaceLayout() {
   )?.label;
 
   const spaceFn = useServerFn(getSpace);
-  const listFn = useServerFn(listMySpaces);
+  const profileFn = useServerFn(getMyProfile);
 
   const space = useQuery({
     queryKey: ["space", spaceId],
     queryFn: () => spaceFn({ data: { spaceId } }),
     retry: false,
   });
-  const spaces = useQuery({ queryKey: ["my-spaces"], queryFn: () => listFn() });
+  const me = useQuery({ queryKey: ["me"], queryFn: () => profileFn() });
 
   async function signOut() {
     await supabase.auth.signOut();
