@@ -32,6 +32,17 @@ function SpacesPage() {
   const spaces = useQuery({ queryKey: ["my-spaces"], queryFn: () => list() });
   const me = useQuery({ queryKey: ["me"], queryFn: () => profileFn() });
 
+  // Single-organization mode: signing in goes straight into the workspace.
+  useEffect(() => {
+    if (spaces.data && spaces.data.length > 0) {
+      navigate({
+        to: "/s/$spaceId",
+        params: { spaceId: spaces.data[0]!.id },
+        replace: true,
+      });
+    }
+  }, [spaces.data, navigate]);
+
   async function signOut() {
     await supabase.auth.signOut();
     navigate({ to: "/login", replace: true });
@@ -101,9 +112,10 @@ function SpacesPage() {
           {spaces.data?.length === 0 && (
             <Card className="sm:col-span-2">
               <CardContent className="py-12 text-center">
-                <h2 className="text-lg font-semibold">No spaces yet</h2>
+                <h2 className="text-lg font-semibold">Welcome to Leepek</h2>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Create your first space to start running event registration.
+                  Create your workspace to start collecting registrations, attendance and
+                  member data.
                 </p>
                 <Button asChild className="mt-6">
                   <Link to="/create">Create a space</Link>
