@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   endDeskSession,
   getSessionContext,
   submitRegistration,
 } from "@/lib/registration.functions";
+import { deskClockIn, deskSearchPeople } from "@/lib/attendance.functions";
 import { clearDeskSession, readDeskSession } from "@/lib/desk-session";
 import { DeskHelp } from "@/components/desk-help";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check, Loader2, LogOut } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Loader2,
+  LogIn,
+  LogOut,
+  Search,
+  UserPlus,
+} from "lucide-react";
 
 export const Route = createFileRoute("/desk/$sessionId")({
   ssr: false,
@@ -76,6 +86,7 @@ function DeskPage() {
   } | null>(null);
   const [done, setDone] = useState<{ registration_number: string; full_name: string } | null>(null);
   const [count, setCount] = useState(0);
+  const [mode, setMode] = useState<"register" | "clockin">("register");
 
   const fields = useMemo(() => query.data?.fields ?? [], [query.data]);
   const groups = useMemo(() => {
@@ -178,7 +189,31 @@ function DeskPage() {
               {data.space} · {data.desk} ({data.deskCode})
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="flex rounded-lg border border-sidebar-foreground/20 p-0.5 text-xs">
+              <button
+                type="button"
+                aria-pressed={mode === "register"}
+                onClick={() => setMode("register")}
+                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 transition-colors duration-200 ${
+                  mode === "register" ? "bg-sidebar-primary text-sidebar-primary-foreground" : "opacity-75 hover:opacity-100"
+                }`}
+              >
+                <UserPlus className="size-3.5" />
+                Register
+              </button>
+              <button
+                type="button"
+                aria-pressed={mode === "clockin"}
+                onClick={() => setMode("clockin")}
+                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 transition-colors duration-200 ${
+                  mode === "clockin" ? "bg-sidebar-primary text-sidebar-primary-foreground" : "opacity-75 hover:opacity-100"
+                }`}
+              >
+                <LogIn className="size-3.5" />
+                Clock in
+              </button>
+            </div>
             <Badge variant="secondary">{count} registered</Badge>
             <Button size="icon" variant="ghost" onClick={finish} aria-label="End desk session">
               <LogOut className="size-4" />
@@ -188,7 +223,9 @@ function DeskPage() {
       </header>
 
       <div className="mx-auto max-w-2xl px-5 py-8">
-        {done ? (
+        {mode === "clockin" ? (
+          <ClockinPanel sessionId={sessionId} secret={secret!} initialCount={data.checkinsToday} />
+        ) : done ? (
           <Card className="animate-pop">
             <CardContent className="py-12 text-center">
               <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-success text-success-foreground">
@@ -403,6 +440,127 @@ function DeskPage() {
         )}
       </div>
     </main>
+  );
+}
+
+type DeskPerson = {
+  id: string;
+  registration_number: string;
+  full_name: string;
+  phone: string | null;
+  checkedInToday: boolean;
+};
+
+function ClockinPanel({
+  sessionId,
+  secret,
+  initialCount,
+}: {
+  sessionId: string;
+  secret: string;
+  initialCount: number;
+}) {
+  const searchFn = useServerFn(deskSearchPeople);
+  const clockFn = useServerFn(deskClockIn);
+  const queryClient = useQueryClient();
+
+  const [query, setQuery] = useState("");
+  const [todayCount, setTodayCount] = useState(initialCount);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const trimmed = query.trim();
+  const results = useQuery({
+    queryKey: ["desk-people", sessionId, trimmed],
+    enabled: trimmed.length >= 2,
+    queryFn: () => searchFn({ data: { sessionId, secret, query: trimmed } }),
+    placeholderData: (prev) => prev,
+  });
+
+  async function clockIn(person: DeskPerson) {
+    setBusyId(person.id);
+    try {
+      const res = await clockFn({
+        data: { sessionId, secret, registrationId: person.id, method: "DESK_SEARCH" },
+      });
+      if (res.alreadyCheckedIn) {
+        toast.info(`${res.person.full_name} already clocked in today.`);
+      } else {
+        toast.success(`${res.person.full_name} clocked in.`);
+        setTodayCount((c) => c + 1);
+      }
+      await queryClient.invalidateQueries({ queryKey: ["desk-people", sessionId] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Clock-in failed. Try again.");
+    }
+    setBusyId(null);
+  }
+
+  return (
+    <Card className="animate-rise">
+      <CardContent className="space-y-5 py-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold">Clock in</h1>
+          <Badge variant="secondary">{todayCount} today</Badge>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Search by name, phone number or member code, then clock the person in.
+        </p>
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            className="h-12 pl-9 text-base"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Name, phone or member code…"
+            autoFocus
+            autoComplete="off"
+          />
+        </div>
+
+        <ul className="divide-y rounded-lg border">
+          {trimmed.length < 2 && (
+            <li className="px-4 py-6 text-center text-sm text-muted-foreground">
+              Type at least two characters to search.
+            </li>
+          )}
+          {trimmed.length >= 2 && results.isLoading && (
+            <li className="px-4 py-6 text-center text-sm text-muted-foreground">Searching…</li>
+          )}
+          {(results.data?.results ?? []).map((person: DeskPerson) => (
+            <li key={person.id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{person.full_name}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {person.registration_number}
+                  {person.phone ? ` · ${person.phone}` : ""}
+                </p>
+              </div>
+              {person.checkedInToday ? (
+                <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+                  <Check className="size-3.5" /> Clocked in
+                </span>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={() => clockIn(person)}
+                  disabled={busyId === person.id}
+                >
+                  {busyId === person.id && <Loader2 className="size-4 animate-spin" />}
+                  Clock in
+                </Button>
+              )}
+            </li>
+          ))}
+          {trimmed.length >= 2 &&
+            !results.isLoading &&
+            (results.data?.results.length ?? 0) === 0 && (
+              <li className="px-4 py-6 text-center text-sm text-muted-foreground">
+                Nobody matches “{trimmed}”. Register them first, then clock them in.
+              </li>
+            )}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }
 

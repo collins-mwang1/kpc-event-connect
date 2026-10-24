@@ -14,7 +14,7 @@ const sessionCredentials = z.object({
   secret: z.string().min(16),
 });
 
-async function loadSession(sessionId: string, secret: string) {
+export async function loadSession(sessionId: string, secret: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: session } = await supabaseAdmin
     .from("registration_sessions")
@@ -126,6 +126,12 @@ export const getSessionContext = createServerFn({ method: "POST" })
       .select("id", { count: "exact", head: true })
       .eq("session_id", session.id);
 
+    const { count: checkinsToday } = await supabaseAdmin
+      .from("attendance_checkins")
+      .select("id", { count: "exact", head: true })
+      .eq("event_id", session.event_id)
+      .eq("checkin_date", new Date().toISOString().slice(0, 10));
+
     await supabaseAdmin
       .from("registration_sessions")
       .update({ last_seen_at: new Date().toISOString() })
@@ -139,6 +145,7 @@ export const getSessionContext = createServerFn({ method: "POST" })
       deskCode: session.desk?.code ?? "",
       startedAt: session.started_at,
       registeredHere: count ?? 0,
+      checkinsToday: checkinsToday ?? 0,
       fields,
     };
   });

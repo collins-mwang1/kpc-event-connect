@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance_checkins: {
+        Row: {
+          checked_in_at: string
+          checkin_date: string
+          desk_id: string | null
+          event_id: string | null
+          id: string
+          method: Database["public"]["Enums"]["checkin_method"]
+          registration_id: string
+          space_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          checkin_date?: string
+          desk_id?: string | null
+          event_id?: string | null
+          id?: string
+          method: Database["public"]["Enums"]["checkin_method"]
+          registration_id: string
+          space_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          checkin_date?: string
+          desk_id?: string | null
+          event_id?: string | null
+          id?: string
+          method?: Database["public"]["Enums"]["checkin_method"]
+          registration_id?: string
+          space_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_checkins_desk_id_fkey"
+            columns: ["desk_id"]
+            isOneToOne: false
+            referencedRelation: "registration_desks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_checkins_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_checkins_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_checkins_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -54,6 +116,93 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "audit_logs_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      department_members: {
+        Row: {
+          created_at: string
+          department_id: string
+          id: string
+          registration_id: string
+          space_id: string
+        }
+        Insert: {
+          created_at?: string
+          department_id: string
+          id?: string
+          registration_id: string
+          space_id: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string
+          id?: string
+          registration_id?: string
+          space_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "department_members_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "department_members_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "registrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "department_members_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      departments: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          name: string
+          source_field_key: string | null
+          space_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          name: string
+          source_field_key?: string | null
+          space_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          name?: string
+          source_field_key?: string | null
+          space_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_space_id_fkey"
             columns: ["space_id"]
             isOneToOne: false
             referencedRelation: "spaces"
@@ -1000,6 +1149,7 @@ export type Database = {
       }
     }
     Enums: {
+      checkin_method: "DESK_SEARCH" | "DESK_CODE" | "SELF"
       entity_status: "ACTIVE" | "INACTIVE"
       event_status: "DRAFT" | "ACTIVE" | "COMPLETED" | "CANCELLED"
       field_type:
@@ -1149,6 +1299,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      checkin_method: ["DESK_SEARCH", "DESK_CODE", "SELF"],
       entity_status: ["ACTIVE", "INACTIVE"],
       event_status: ["DRAFT", "ACTIVE", "COMPLETED", "CANCELLED"],
       field_type: [
