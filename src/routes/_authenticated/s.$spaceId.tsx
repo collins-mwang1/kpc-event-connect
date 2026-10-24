@@ -79,30 +79,27 @@ function SpaceLayout() {
     <div className="min-h-screen bg-background lg:flex">
       <aside className="bg-sidebar text-sidebar-foreground lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0">
         <div className="p-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex w-full items-center justify-between gap-2 rounded-lg bg-sidebar-accent px-3 py-2.5 text-left text-sm font-medium text-sidebar-accent-foreground transition-opacity duration-200 hover:opacity-90">
-                <span className="truncate">
-                  {space.data?.space.name ?? <Skeleton className="h-4 w-24" />}
-                </span>
-                <ChevronsUpDown className="size-4 shrink-0 opacity-60" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              {spaces.data?.map((item) => (
-                <DropdownMenuItem key={item.id} asChild>
-                  <Link to="/s/$spaceId" params={{ spaceId: item.id }}>
-                    {item.name}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/create">Create a space</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={signOut}>Sign out</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="truncate rounded-lg bg-sidebar-accent px-3 py-2.5 text-sm font-medium text-sidebar-accent-foreground">
+            {space.data?.space.name ?? <Skeleton className="h-4 w-24" />}
+          </div>
+          <div className="mt-2 flex items-center gap-1">
+            {me.data?.isPlatformAdmin && (
+              <Link
+                to="/platform"
+                className="flex flex-1 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-sidebar-foreground/80 transition-colors duration-200 hover:bg-sidebar-accent"
+              >
+                <ShieldCheck className="size-3.5" />
+                Platform
+              </Link>
+            )}
+            <button
+              onClick={signOut}
+              className="flex flex-1 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-sidebar-foreground/80 transition-colors duration-200 hover:bg-sidebar-accent"
+            >
+              <LogOut className="size-3.5" />
+              Sign out
+            </button>
+          </div>
 
           <nav className="mt-4 flex gap-1 overflow-x-auto lg:mt-6 lg:flex-col lg:overflow-visible">
             {nav.map((item) => {
@@ -138,8 +135,8 @@ function SpaceLayout() {
             <nav aria-label="Breadcrumb" className="min-w-0 flex-1">
               <ol className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
                 <li className="shrink-0">
-                  <Link to="/spaces" className="hover:text-foreground">
-                    Spaces
+                  <Link to="/s/$spaceId" params={{ spaceId }} className="hover:text-foreground">
+                    Home
                   </Link>
                 </li>
                 <li aria-hidden className="shrink-0 opacity-50">
