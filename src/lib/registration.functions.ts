@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { HttpError, generateSecret, hashValue, writeAudit } from "./tenant.server";
+import { HttpError, generateSecret, hashSecret, hashValue, writeAudit } from "./tenant.server";
 import { loadDeskSession as loadSession } from "./desk-session.server";
 
 /**
