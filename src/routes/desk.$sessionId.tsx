@@ -443,6 +443,127 @@ function DeskPage() {
   );
 }
 
+type DeskPerson = {
+  id: string;
+  registration_number: string;
+  full_name: string;
+  phone: string | null;
+  checkedInToday: boolean;
+};
+
+function ClockinPanel({
+  sessionId,
+  secret,
+  initialCount,
+}: {
+  sessionId: string;
+  secret: string;
+  initialCount: number;
+}) {
+  const searchFn = useServerFn(deskSearchPeople);
+  const clockFn = useServerFn(deskClockIn);
+  const queryClient = useQueryClient();
+
+  const [query, setQuery] = useState("");
+  const [todayCount, setTodayCount] = useState(initialCount);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const trimmed = query.trim();
+  const results = useQuery({
+    queryKey: ["desk-people", sessionId, trimmed],
+    enabled: trimmed.length >= 2,
+    queryFn: () => searchFn({ data: { sessionId, secret, query: trimmed } }),
+    placeholderData: (prev) => prev,
+  });
+
+  async function clockIn(person: DeskPerson) {
+    setBusyId(person.id);
+    try {
+      const res = await clockFn({
+        data: { sessionId, secret, registrationId: person.id, method: "DESK_SEARCH" },
+      });
+      if (res.alreadyCheckedIn) {
+        toast.info(`${res.person.full_name} already clocked in today.`);
+      } else {
+        toast.success(`${res.person.full_name} clocked in.`);
+        setTodayCount((c) => c + 1);
+      }
+      await queryClient.invalidateQueries({ queryKey: ["desk-people", sessionId] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Clock-in failed. Try again.");
+    }
+    setBusyId(null);
+  }
+
+  return (
+    <Card className="animate-rise">
+      <CardContent className="space-y-5 py-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold">Clock in</h1>
+          <Badge variant="secondary">{todayCount} today</Badge>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Search by name, phone number or member code, then clock the person in.
+        </p>
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            className="h-12 pl-9 text-base"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Name, phone or member code…"
+            autoFocus
+            autoComplete="off"
+          />
+        </div>
+
+        <ul className="divide-y rounded-lg border">
+          {trimmed.length < 2 && (
+            <li className="px-4 py-6 text-center text-sm text-muted-foreground">
+              Type at least two characters to search.
+            </li>
+          )}
+          {trimmed.length >= 2 && results.isLoading && (
+            <li className="px-4 py-6 text-center text-sm text-muted-foreground">Searching…</li>
+          )}
+          {(results.data?.results ?? []).map((person: DeskPerson) => (
+            <li key={person.id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{person.full_name}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {person.registration_number}
+                  {person.phone ? ` · ${person.phone}` : ""}
+                </p>
+              </div>
+              {person.checkedInToday ? (
+                <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
+                  <Check className="size-3.5" /> Clocked in
+                </span>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={() => clockIn(person)}
+                  disabled={busyId === person.id}
+                >
+                  {busyId === person.id && <Loader2 className="size-4 animate-spin" />}
+                  Clock in
+                </Button>
+              )}
+            </li>
+          ))}
+          {trimmed.length >= 2 &&
+            !results.isLoading &&
+            (results.data?.results.length ?? 0) === 0 && (
+              <li className="px-4 py-6 text-center text-sm text-muted-foreground">
+                Nobody matches “{trimmed}”. Register them first, then clock them in.
+              </li>
+            )}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
+
 function Centered({ children }: { children: React.ReactNode }) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-2 bg-background px-6 text-center">
