@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { HttpError, requireMembership, writeAudit } from "./tenant.server";
-import { loadSession } from "./registration.functions";
+import { loadDeskSession as loadSession } from "./desk-session.server";
 
 /**
  * Attendance (clock-in) layer.
