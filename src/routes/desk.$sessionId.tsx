@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   endDeskSession,
   getSessionContext,
   submitRegistration,
 } from "@/lib/registration.functions";
+import { deskClockIn, deskSearchPeople } from "@/lib/attendance.functions";
 import { clearDeskSession, readDeskSession } from "@/lib/desk-session";
 import { DeskHelp } from "@/components/desk-help";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check, Loader2, LogOut } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Loader2,
+  LogIn,
+  LogOut,
+  Search,
+  UserPlus,
+} from "lucide-react";
 
 export const Route = createFileRoute("/desk/$sessionId")({
   ssr: false,
@@ -76,6 +86,7 @@ function DeskPage() {
   } | null>(null);
   const [done, setDone] = useState<{ registration_number: string; full_name: string } | null>(null);
   const [count, setCount] = useState(0);
+  const [mode, setMode] = useState<"register" | "clockin">("register");
 
   const fields = useMemo(() => query.data?.fields ?? [], [query.data]);
   const groups = useMemo(() => {
@@ -178,7 +189,31 @@ function DeskPage() {
               {data.space} · {data.desk} ({data.deskCode})
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="flex rounded-lg border border-sidebar-foreground/20 p-0.5 text-xs">
+              <button
+                type="button"
+                aria-pressed={mode === "register"}
+                onClick={() => setMode("register")}
+                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 transition-colors duration-200 ${
+                  mode === "register" ? "bg-sidebar-primary text-sidebar-primary-foreground" : "opacity-75 hover:opacity-100"
+                }`}
+              >
+                <UserPlus className="size-3.5" />
+                Register
+              </button>
+              <button
+                type="button"
+                aria-pressed={mode === "clockin"}
+                onClick={() => setMode("clockin")}
+                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 transition-colors duration-200 ${
+                  mode === "clockin" ? "bg-sidebar-primary text-sidebar-primary-foreground" : "opacity-75 hover:opacity-100"
+                }`}
+              >
+                <LogIn className="size-3.5" />
+                Clock in
+              </button>
+            </div>
             <Badge variant="secondary">{count} registered</Badge>
             <Button size="icon" variant="ghost" onClick={finish} aria-label="End desk session">
               <LogOut className="size-4" />
@@ -188,7 +223,9 @@ function DeskPage() {
       </header>
 
       <div className="mx-auto max-w-2xl px-5 py-8">
-        {done ? (
+        {mode === "clockin" ? (
+          <ClockinPanel sessionId={sessionId} secret={secret!} initialCount={data.checkinsToday} />
+        ) : done ? (
           <Card className="animate-pop">
             <CardContent className="py-12 text-center">
               <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-success text-success-foreground">

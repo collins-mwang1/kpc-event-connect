@@ -16,11 +16,14 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedCreateRouteImport } from './routes/_authenticated/create'
 import { Route as AuthenticatedPlatformRouteImport } from './routes/_authenticated/platform'
 import { Route as AuthenticatedSpacesRouteImport } from './routes/_authenticated/spaces'
+import { Route as CheckinSpaceIdRouteImport } from './routes/checkin.$spaceId'
 import { Route as DeskSessionIdRouteImport } from './routes/desk.$sessionId'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as AuthenticatedSSpaceIdRouteImport } from './routes/_authenticated/s.$spaceId'
 import { Route as AuthenticatedSSpaceIdIndexRouteImport } from './routes/_authenticated/s.$spaceId.index'
+import { Route as AuthenticatedSSpaceIdAttendanceRouteImport } from './routes/_authenticated/s.$spaceId.attendance'
 import { Route as AuthenticatedSSpaceIdAttendeesRouteImport } from './routes/_authenticated/s.$spaceId.attendees'
+import { Route as AuthenticatedSSpaceIdDepartmentsRouteImport } from './routes/_authenticated/s.$spaceId.departments'
 import { Route as AuthenticatedSSpaceIdDesksRouteImport } from './routes/_authenticated/s.$spaceId.desks'
 import { Route as AuthenticatedSSpaceIdEventsRouteImport } from './routes/_authenticated/s.$spaceId.events'
 import { Route as AuthenticatedSSpaceIdMembersRouteImport } from './routes/_authenticated/s.$spaceId.members'
@@ -63,6 +66,11 @@ const AuthenticatedSpacesRoute = AuthenticatedSpacesRouteImport.update({
   path: '/spaces',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const CheckinSpaceIdRoute = CheckinSpaceIdRouteImport.update({
+  id: '/checkin/$spaceId',
+  path: '/checkin/$spaceId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DeskSessionIdRoute = DeskSessionIdRouteImport.update({
   id: '/desk/$sessionId',
   path: '/desk/$sessionId',
@@ -84,10 +92,22 @@ const AuthenticatedSSpaceIdIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedSSpaceIdRoute,
   } as any)
+const AuthenticatedSSpaceIdAttendanceRoute =
+  AuthenticatedSSpaceIdAttendanceRouteImport.update({
+    id: '/attendance',
+    path: '/attendance',
+    getParentRoute: () => AuthenticatedSSpaceIdRoute,
+  } as any)
 const AuthenticatedSSpaceIdAttendeesRoute =
   AuthenticatedSSpaceIdAttendeesRouteImport.update({
     id: '/attendees',
     path: '/attendees',
+    getParentRoute: () => AuthenticatedSSpaceIdRoute,
+  } as any)
+const AuthenticatedSSpaceIdDepartmentsRoute =
+  AuthenticatedSSpaceIdDepartmentsRouteImport.update({
+    id: '/departments',
+    path: '/departments',
     getParentRoute: () => AuthenticatedSSpaceIdRoute,
   } as any)
 const AuthenticatedSSpaceIdDesksRoute =
@@ -140,10 +160,13 @@ export interface FileRoutesByFullPath {
   '/create': typeof AuthenticatedCreateRoute
   '/platform': typeof AuthenticatedPlatformRoute
   '/spaces': typeof AuthenticatedSpacesRoute
+  '/checkin/$spaceId': typeof CheckinSpaceIdRoute
   '/desk/$sessionId': typeof DeskSessionIdRoute
   '/invite/$token': typeof InviteTokenRoute
   '/s/$spaceId': typeof AuthenticatedSSpaceIdRouteWithChildren
+  '/s/$spaceId/attendance': typeof AuthenticatedSSpaceIdAttendanceRoute
   '/s/$spaceId/attendees': typeof AuthenticatedSSpaceIdAttendeesRoute
+  '/s/$spaceId/departments': typeof AuthenticatedSSpaceIdDepartmentsRoute
   '/s/$spaceId/desks': typeof AuthenticatedSSpaceIdDesksRoute
   '/s/$spaceId/events': typeof AuthenticatedSSpaceIdEventsRoute
   '/s/$spaceId/members': typeof AuthenticatedSSpaceIdMembersRoute
@@ -160,9 +183,12 @@ export interface FileRoutesByTo {
   '/create': typeof AuthenticatedCreateRoute
   '/platform': typeof AuthenticatedPlatformRoute
   '/spaces': typeof AuthenticatedSpacesRoute
+  '/checkin/$spaceId': typeof CheckinSpaceIdRoute
   '/desk/$sessionId': typeof DeskSessionIdRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/s/$spaceId/attendance': typeof AuthenticatedSSpaceIdAttendanceRoute
   '/s/$spaceId/attendees': typeof AuthenticatedSSpaceIdAttendeesRoute
+  '/s/$spaceId/departments': typeof AuthenticatedSSpaceIdDepartmentsRoute
   '/s/$spaceId/desks': typeof AuthenticatedSSpaceIdDesksRoute
   '/s/$spaceId/events': typeof AuthenticatedSSpaceIdEventsRoute
   '/s/$spaceId/members': typeof AuthenticatedSSpaceIdMembersRoute
@@ -181,10 +207,13 @@ export interface FileRoutesById {
   '/_authenticated/create': typeof AuthenticatedCreateRoute
   '/_authenticated/platform': typeof AuthenticatedPlatformRoute
   '/_authenticated/spaces': typeof AuthenticatedSpacesRoute
+  '/checkin/$spaceId': typeof CheckinSpaceIdRoute
   '/desk/$sessionId': typeof DeskSessionIdRoute
   '/invite/$token': typeof InviteTokenRoute
   '/_authenticated/s/$spaceId': typeof AuthenticatedSSpaceIdRouteWithChildren
+  '/_authenticated/s/$spaceId/attendance': typeof AuthenticatedSSpaceIdAttendanceRoute
   '/_authenticated/s/$spaceId/attendees': typeof AuthenticatedSSpaceIdAttendeesRoute
+  '/_authenticated/s/$spaceId/departments': typeof AuthenticatedSSpaceIdDepartmentsRoute
   '/_authenticated/s/$spaceId/desks': typeof AuthenticatedSSpaceIdDesksRoute
   '/_authenticated/s/$spaceId/events': typeof AuthenticatedSSpaceIdEventsRoute
   '/_authenticated/s/$spaceId/members': typeof AuthenticatedSSpaceIdMembersRoute
@@ -203,10 +232,13 @@ export interface FileRouteTypes {
     | '/create'
     | '/platform'
     | '/spaces'
+    | '/checkin/$spaceId'
     | '/desk/$sessionId'
     | '/invite/$token'
     | '/s/$spaceId'
+    | '/s/$spaceId/attendance'
     | '/s/$spaceId/attendees'
+    | '/s/$spaceId/departments'
     | '/s/$spaceId/desks'
     | '/s/$spaceId/events'
     | '/s/$spaceId/members'
@@ -223,9 +255,12 @@ export interface FileRouteTypes {
     | '/create'
     | '/platform'
     | '/spaces'
+    | '/checkin/$spaceId'
     | '/desk/$sessionId'
     | '/invite/$token'
+    | '/s/$spaceId/attendance'
     | '/s/$spaceId/attendees'
+    | '/s/$spaceId/departments'
     | '/s/$spaceId/desks'
     | '/s/$spaceId/events'
     | '/s/$spaceId/members'
@@ -243,10 +278,13 @@ export interface FileRouteTypes {
     | '/_authenticated/create'
     | '/_authenticated/platform'
     | '/_authenticated/spaces'
+    | '/checkin/$spaceId'
     | '/desk/$sessionId'
     | '/invite/$token'
     | '/_authenticated/s/$spaceId'
+    | '/_authenticated/s/$spaceId/attendance'
     | '/_authenticated/s/$spaceId/attendees'
+    | '/_authenticated/s/$spaceId/departments'
     | '/_authenticated/s/$spaceId/desks'
     | '/_authenticated/s/$spaceId/events'
     | '/_authenticated/s/$spaceId/members'
@@ -262,6 +300,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   JoinRoute: typeof JoinRoute
   LoginRoute: typeof LoginRoute
+  CheckinSpaceIdRoute: typeof CheckinSpaceIdRoute
   DeskSessionIdRoute: typeof DeskSessionIdRoute
   InviteTokenRoute: typeof InviteTokenRoute
 }
@@ -317,6 +356,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSpacesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/checkin/$spaceId': {
+      id: '/checkin/$spaceId'
+      path: '/checkin/$spaceId'
+      fullPath: '/checkin/$spaceId'
+      preLoaderRoute: typeof CheckinSpaceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/desk/$sessionId': {
       id: '/desk/$sessionId'
       path: '/desk/$sessionId'
@@ -345,11 +391,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSSpaceIdIndexRouteImport
       parentRoute: typeof AuthenticatedSSpaceIdRoute
     }
+    '/_authenticated/s/$spaceId/attendance': {
+      id: '/_authenticated/s/$spaceId/attendance'
+      path: '/attendance'
+      fullPath: '/s/$spaceId/attendance'
+      preLoaderRoute: typeof AuthenticatedSSpaceIdAttendanceRouteImport
+      parentRoute: typeof AuthenticatedSSpaceIdRoute
+    }
     '/_authenticated/s/$spaceId/attendees': {
       id: '/_authenticated/s/$spaceId/attendees'
       path: '/attendees'
       fullPath: '/s/$spaceId/attendees'
       preLoaderRoute: typeof AuthenticatedSSpaceIdAttendeesRouteImport
+      parentRoute: typeof AuthenticatedSSpaceIdRoute
+    }
+    '/_authenticated/s/$spaceId/departments': {
+      id: '/_authenticated/s/$spaceId/departments'
+      path: '/departments'
+      fullPath: '/s/$spaceId/departments'
+      preLoaderRoute: typeof AuthenticatedSSpaceIdDepartmentsRouteImport
       parentRoute: typeof AuthenticatedSSpaceIdRoute
     }
     '/_authenticated/s/$spaceId/desks': {
@@ -405,7 +465,9 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedSSpaceIdRouteChildren {
+  AuthenticatedSSpaceIdAttendanceRoute: typeof AuthenticatedSSpaceIdAttendanceRoute
   AuthenticatedSSpaceIdAttendeesRoute: typeof AuthenticatedSSpaceIdAttendeesRoute
+  AuthenticatedSSpaceIdDepartmentsRoute: typeof AuthenticatedSSpaceIdDepartmentsRoute
   AuthenticatedSSpaceIdDesksRoute: typeof AuthenticatedSSpaceIdDesksRoute
   AuthenticatedSSpaceIdEventsRoute: typeof AuthenticatedSSpaceIdEventsRoute
   AuthenticatedSSpaceIdMembersRoute: typeof AuthenticatedSSpaceIdMembersRoute
@@ -417,7 +479,9 @@ interface AuthenticatedSSpaceIdRouteChildren {
 }
 
 const AuthenticatedSSpaceIdRouteChildren: AuthenticatedSSpaceIdRouteChildren = {
+  AuthenticatedSSpaceIdAttendanceRoute: AuthenticatedSSpaceIdAttendanceRoute,
   AuthenticatedSSpaceIdAttendeesRoute: AuthenticatedSSpaceIdAttendeesRoute,
+  AuthenticatedSSpaceIdDepartmentsRoute: AuthenticatedSSpaceIdDepartmentsRoute,
   AuthenticatedSSpaceIdDesksRoute: AuthenticatedSSpaceIdDesksRoute,
   AuthenticatedSSpaceIdEventsRoute: AuthenticatedSSpaceIdEventsRoute,
   AuthenticatedSSpaceIdMembersRoute: AuthenticatedSSpaceIdMembersRoute,
@@ -455,6 +519,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   JoinRoute: JoinRoute,
   LoginRoute: LoginRoute,
+  CheckinSpaceIdRoute: CheckinSpaceIdRoute,
   DeskSessionIdRoute: DeskSessionIdRoute,
   InviteTokenRoute: InviteTokenRoute,
 }
